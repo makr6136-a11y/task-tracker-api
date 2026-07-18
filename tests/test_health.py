@@ -1,0 +1,22 @@
+"""
+Basic test for the /health endpoint.
+
+Run with: pytest
+"""
+
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_health_returns_200_and_expected_shape():
+    response = client.get("/health")
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "timestamp" in body
+    assert isinstance(body["timestamp"], str)
