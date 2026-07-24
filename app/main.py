@@ -8,12 +8,13 @@ It only exposes a /health endpoint used to verify that the service
 is running correctly.
 """
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.business_rules import validate_status_transition
 from app import storage
+from app.filters import is_overdue
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 app = FastAPI(
@@ -54,8 +55,12 @@ def health_check() -> dict:
 def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
+    overdue: bool | None = None,
 ) -> list[TaskResponse]:
-    return storage.get_all_tasks(status=status, priority=priority)
+    tasks = storage.get_all_tasks(status=status, priority=priority)
+    if overdue:
+        tasks = [task for task in tasks if is_overdue(task, date.today())]
+    return tasks
 
 
 @app.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, tags=["tasks"])

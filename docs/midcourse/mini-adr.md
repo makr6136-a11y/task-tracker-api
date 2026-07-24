@@ -1,0 +1,17 @@
+# Mini-ADR: Due Dates + Overdue Filter, Search + Combined Filters
+
+## Feature 1: Due Dates + Overdue Filter
+
+**Decision:** Add an optional `due_date` field (native `date` type) to `TaskCreate`, `TaskUpdate`, and `TaskResponse`. Overdue status is **computed on read**, not stored — a small pure function `is_overdue(task, today)` checks `due_date < today and status != Done`. This function lives in a `filters.py`/`utils.py` module, not inline in the route or as a Pydantic computed field, since it depends on "today's date," an external input, which makes it easy to unit test independently. Filtering (`GET /tasks?overdue=true`) reuses this same function and composes with existing status/priority filters via a simple AND condition. Invalid date formats are rejected automatically by Pydantic's native `date` type validation (returns 422), satisfying DD-2 without custom validation code. For PATCH (DD-5), the update model uses `exclude_unset=True` so an omitted `due_date` leaves the existing value untouched, while an explicit `due_date: null` in the payload clears it — distinguishing "not mentioned" from "intentionally cleared."
+
+**Alternative considered and rejected:** Storing `is_overdue` as a persisted field, updated by a background job or on write. Rejected — this creates a second source of truth that can silently go stale (a task becomes overdue just because a day passed, with no corresponding write), and requires scheduling infrastructure that's unnecessary complexity for an in-memory learning project.
+
+**Out of scope:** Timezone-aware dates, time-of-day granularity, sorting by due date, notifications/reminders, bulk due-date operations.
+
+## Feature 2: Search + Combined Filters
+
+**Decision:** No changes to the data model. Add an optional `search` query parameter to `GET /tasks`. Matching is a case-insensitive substring check against `title` and `description`, implemented as a standalone `matches_keyword(task, term)` function alongside `is_overdue()`. All filters (`status`, `priority`, `overdue`, `search`) compose together as a single AND-chain in the route — no special-casing search versus the others, so any combination of filters works symmetrically. No matches returns `200` with `[]`, matching the existing pattern already used elsewhere in this project (`test_list_tasks_empty_returns_200_and_empty_list`). Empty or whitespace-only search terms are trimmed and treated as "no filter" (matching everything, per S5), and special characters are treated as literal text with no wildcard/regex interpretation, since substring matching via Python's `in` operator doesn't special-case any characters.
+
+**Alternative considered and rejected:** A separate `GET /tasks/search?q=...` endpoint. Rejected — the requirement that search compose with status/priority filters would force duplicating filter logic across two endpoints, or an awkward merge step. Keeping search as one more optional query param on the existing `GET /tasks` route keeps all filters naturally orthogonal and combinable.
+
+**Out of scope:** Fuzzy matching, ranking/relevance scoring, full-text search indexes, wildcard/regex syntax, searching fields beyond title/description, live/debounced search (frontend concern, not backend).
