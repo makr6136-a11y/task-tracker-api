@@ -42,8 +42,16 @@ def health_check() -> dict:
     """
     Health check endpoint.
 
-    Returns HTTP 200 with the current service status and an
-    ISO 8601 UTC timestamp.
+    Returns the service status and current UTC timestamp, used to verify
+    that the API process is running and reachable.
+
+    Returns:
+        dict: A mapping with:
+            - status (str): Always "ok".
+            - timestamp (str): Current UTC time in ISO 8601 format.
+
+    Example:
+        GET /health -> 200 {"status": "ok", "timestamp": "2026-07-25T12:00:00+00:00"}
     """
     return {
         "status": "ok",
@@ -57,6 +65,27 @@ def list_tasks(
     priority: TaskPriority | None = None,
     overdue: bool | None = None,
 ) -> list[TaskResponse]:
+    """
+    List tasks, optionally filtered by status, priority, and overdue state.
+
+    Args:
+        status (TaskStatus | None): If provided, only tasks with this
+            exact status are returned.
+        priority (TaskPriority | None): If provided, only tasks with
+            this exact priority are returned.
+        overdue (bool | None): If truthy, results are further restricted
+            to tasks for which `is_overdue` returns True (has a past
+            due_date and status is not Done). [VERIFY] The check is
+            `if overdue:`, so `overdue=False` is not distinguished from
+            `overdue=None` — neither applies overdue filtering.
+
+    Returns:
+        list[TaskResponse]: Tasks matching the given filters, in
+        storage insertion order.
+
+    Example:
+        GET /tasks?status=ToDo&priority=High&overdue=true
+    """
     tasks = storage.get_all_tasks(status=status, priority=priority)
     if overdue:
         tasks = [task for task in tasks if is_overdue(task, date.today())]
@@ -65,9 +94,40 @@ def list_tasks(
 
 @app.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, tags=["tasks"])
 def create_task(payload: TaskCreate) -> TaskResponse:
+    """
+    Create a new task.
+
+    Args:
+        payload (TaskCreate): Task fields to create. Unknown fields are
+            rejected with 422 (model_config extra="forbid").
+
+    Returns:
+        TaskResponse: The newly created task, including its generated
+        id and created_at/updated_at timestamps.
+
+    Example:
+        POST /tasks {"title": "Write docs"} -> 201 TaskResponse
+    """
     return storage.add_task(payload)
+
+
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def get_task(task_id: str) -> TaskResponse:
+    """
+    Retrieve a single task by id.
+
+    Args:
+        task_id (str): The task's unique id.
+
+    Returns:
+        TaskResponse: The matching task.
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+
+    Example:
+        GET /tasks/{task_id} -> 200 TaskResponse | 404
+    """
     task = storage.get_task_by_id(task_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
@@ -76,6 +136,26 @@ def get_task(task_id: str) -> TaskResponse:
 
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
+    """
+    Partially update a task, enforcing status transition rules.
+
+    Args:
+        task_id (str): The task's unique id.
+        payload (TaskUpdate): Fields to update; unset fields are left
+            unchanged. Unknown fields are rejected with 422.
+
+    Returns:
+        TaskResponse: The updated task.
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+        HTTPException: 422 if `payload.status` is set and the transition
+            from the task's current status to the new status is not in
+            `VALID_TRANSITIONS` (see app/business_rules.py).
+
+    Example:
+        PATCH /tasks/{task_id} {"status": "InProgress"} -> 200 TaskResponse
+    """
     existing = storage.get_task_by_id(task_id)
     if existing is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
@@ -85,8 +165,25 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
 
     updated = storage.update_task(task_id, payload)
     return updated
+
+
 @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
 def delete_task(task_id: str) -> None:
+    """
+    Delete a task by id.
+
+    Args:
+        task_id (str): The task's unique id.
+
+    Returns:
+        None: Responds with 204 No Content on success.
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+
+    Example:
+        DELETE /tasks/{task_id} -> 204 | 404
+    """
     deleted = storage.delete_task(task_id)
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
