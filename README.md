@@ -204,9 +204,14 @@ task-tracker-api/
 
 ## 10. Decisions and Notes
 
-[VERIFY] No `docs/decisions/` directory exists in this repo as of this read.
-The closest equivalent is `docs/midcourse/mini-adr.md`, a mini architecture
-decision record covering the due-date/overdue-filter and search features:
+`docs/decisions/` contains per-module technical decision notes:
+
+- [`docs/decisions/dockerfile-design.md`](docs/decisions/dockerfile-design.md)
+  — Dockerfile design decisions (two-stage build, non-root user, Python
+  version and CI-coverage open questions)
+
+`docs/midcourse/` contains earlier planning and verification docs, including
+a mini architecture decision record:
 
 - [`docs/midcourse/mini-adr.md`](docs/midcourse/mini-adr.md) — architecture
   decisions (due dates + overdue filter; planned search + combined filters)
