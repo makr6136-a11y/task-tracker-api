@@ -225,4 +225,73 @@ def test_list_tasks_without_overdue_param_returns_all_tasks(client):
     body = response.json()
     assert len(body) == 3
     titles = {task["title"] for task in body}
-    assert titles == {"Past due task", "Future task", "No due date task"}    
+    assert titles == {"Past due task", "Future task", "No due date task"}
+
+
+def test_search_matches_title_case_insensitive(client):
+    client.post("/tasks", json={"title": "Buy MILK"})
+    client.post("/tasks", json={"title": "Read book"})
+
+    response = client.get("/tasks", params={"search": "milk"})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "Buy MILK"
+
+
+def test_search_matches_description(client):
+    client.post("/tasks", json={"title": "Grocery run", "description": "Need to buy eggs and bread"})
+    client.post("/tasks", json={"title": "Office work", "description": "Finish the report"})
+
+    response = client.get("/tasks", params={"search": "eggs"})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "Grocery run"
+
+
+def test_search_no_match_returns_200_and_empty_list(client):
+    client.post("/tasks", json={"title": "Task one"})
+    client.post("/tasks", json={"title": "Task two"})
+
+    response = client.get("/tasks", params={"search": "xyz123nonsense"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_search_empty_string_returns_all_tasks(client):
+    client.post("/tasks", json={"title": "First task"})
+    client.post("/tasks", json={"title": "Second task"})
+
+    response = client.get("/tasks", params={"search": ""})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2
+    titles = {task["title"] for task in body}
+    assert titles == {"First task", "Second task"}
+
+
+def test_search_combined_with_status_filter(client):
+    client.post("/tasks", json={"title": "Search title"})
+    client.post("/tasks", json={"title": "Search done", "status": "Done"})
+    client.post("/tasks", json={"title": "Other task"})
+
+    response = client.get("/tasks", params={"status": "ToDo", "search": "search"})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "Search title"
+    assert body[0]["status"] == "ToDo"
+
+
+def test_search_combined_with_priority_filter(client):
+    client.post("/tasks", json={"title": "Search high", "priority": "High"})
+    client.post("/tasks", json={"title": "Search low", "priority": "Low"})
+    client.post("/tasks", json={"title": "Other task", "priority": "High"})
+
+    response = client.get("/tasks", params={"priority": "High", "search": "search"})
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["title"] == "Search high"
+    assert body[0]["priority"] == "High"

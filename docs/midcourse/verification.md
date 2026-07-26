@@ -55,13 +55,45 @@ New tests added:
 
 ## Feature 2: Search + Combined Filters
 
-*(To be completed after Feature 2 implementation)*
+### Backend implementation summary
+- Added `matches_keyword(task, term)` as a pure function in `app/filters.py`
+- Case-insensitive substring match (using `.casefold()`) against `title` and `description`
+- Empty/whitespace search term returns `True` for all tasks (no filter applied)
+- Added `search: str | None = None` query parameter to `GET /tasks`, composing with existing `status`, `priority`, and `overdue` filters
+
+### Manual verification (4 scenarios, single test run)
+| Scenario | Expected | Actual |
+|---|---|---|
+| `search=milk` matching a task titled "Buy milk" | Task appears in results | ✅ Appeared |
+| `search=MILK` (different case) | Same task still appears | ✅ Appeared (case-insensitive confirmed) |
+| `search=` (empty) | All tasks returned, no filtering | ✅ All tasks returned |
+| `search=xyz123nonsense` (no match) | `200` with `[]`, not an error | ✅ Returned `[]` |
+
+### Pytest results
+Command: `python -m pytest tests/ -v`
+
+Result: **37 passed** (31 from Feature 1 + 6 search tests)
+
+New tests added:
+- `test_search_matches_title_case_insensitive`
+- `test_search_matches_description`
+- `test_search_no_match_returns_200_and_empty_list`
+- `test_search_empty_string_returns_all_tasks`
+- `test_search_combined_with_status_filter`
+- `test_search_combined_with_priority_filter`
+
+### Break Test evidence (Feature 2)
+**Break introduced:** Commented out the `description` half of the match condition inside `matches_keyword()` in `app/filters.py`, changing `return needle in title or needle in description` to `return needle in title` only.
+
+**Result:** `test_search_matches_description` FAILED — a task matched only by its description content ("Grocery run" with description containing "eggs") was no longer found when searching "eggs". All other 36 tests remained unaffected.
+
+**Conclusion:** This confirms the test precisely and correctly protects the "search matches description, not just title" requirement. The check was restored, and the suite returned to 37/37 passing.
 
 ---
 
 ## Full Behavior Contract (post both features)
 
-*(To be completed after both features and any refactor)*
+*(To be completed after frontend integration for both features and any refactor)*
 
 ---
 
