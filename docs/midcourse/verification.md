@@ -93,10 +93,31 @@ New tests added:
 
 ## Full Behavior Contract (post both features)
 
-*(To be completed after frontend integration for both features and any refactor)*
+Verified manually at http://localhost:5500, after a full restart of both backend and frontend, with fresh test data covering all scenarios.
 
----
+| # | Behavior | Result |
+|---|---|---|
+| 1 | Three columns render with correct counts | ✅ PASS |
+| 2 | Cards sort by priority within each column | ✅ PASS |
+| 3 | Loading state appears before tasks load | ✅ PASS |
+| 4 | Empty columns remain visible | ✅ PASS |
+| 5 | Error state appears when backend is stopped | ✅ PASS |
+| 6 | Valid drag sends PATCH and updates board | ✅ PASS |
+| 7 | Invalid drag/422 reverts and shows message | ✅ PASS |
+| 8 | New Task/Edit modal flows work, including blank-title validation | ✅ PASS |
+| 9 | Due date + overdue badge display and update correctly | ✅ PASS |
+| 10 | Search filters by title/description correctly, clears properly | ✅ PASS |
+
+**Result: 10/10 passing.** Both new features (due dates/overdue filter, search) integrate correctly with all pre-existing Module 3 board behavior — no regressions introduced.
+
+## Full Pytest Suite (post both features)
+
+Command: `python -m pytest tests/ -v`
+
+Result: **37 passed** (0 failed)
 
 ## Manual Browser / Frontend Checks
 
-*(To be completed after frontend integration)*
+- Confirmed via backend terminal logs that all frontend actions (create, edit, drag, search) correctly trigger the expected HTTP requests (`POST /tasks` → 201, `PATCH /tasks/{id}` → 200, `GET /tasks?search=...` → 200).
+- Confirmed search-while-typing works correctly (fires on every keystroke via the `input` event); results narrow and clear as expected. No debounce was added — this was evaluated as unnecessary UX polish, not a functional requirement, given it does not affect correctness and is outside the scope of the original user stories.
+- Confirmed in-memory storage resets on server restart are expected behavior (documented architecture decision from Module 1), not a bug — verified by recreating test data after each restart during this testing session.
