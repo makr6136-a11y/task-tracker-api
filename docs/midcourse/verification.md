@@ -116,6 +116,16 @@ Command: `python -m pytest tests/ -v`
 
 Result: **37 passed** (0 failed)
 
+## Refactor (post-checkpoint)
+
+**Change:** Added clarifying comments to the `overdue` and `search` filter conditions in `GET /tasks` (`app/main.py`), explaining the intentional behavior of each (why `overdue=False`/`None` are treated identically, and why `search`'s "is not None" check still works correctly for empty strings via `matches_keyword`'s internal handling). No logic was changed.
+
+**Before:** 37 passed (see "Full Pytest Suite" above)
+
+**After:** 37 passed — confirmed via `python -m pytest -v`, and spot-checked manually via `curl` on both `?overdue=true` and `?search=milk`, both returning identical results to before the refactor.
+
+**Conclusion:** Behavior contract and full test suite remain unchanged after the refactor, confirming it was purely clarifying and introduced no regressions.
+
 ## Manual Browser / Frontend Checks
 
 - Confirmed via backend terminal logs that all frontend actions (create, edit, drag, search) correctly trigger the expected HTTP requests (`POST /tasks` → 201, `PATCH /tasks/{id}` → 200, `GET /tasks?search=...` → 200).
