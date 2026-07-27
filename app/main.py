@@ -92,8 +92,12 @@ def list_tasks(
         GET /tasks?status=ToDo&priority=High&overdue=true&search=report
     """
     tasks = storage.get_all_tasks(status=status, priority=priority)
+    # overdue=False and overdue=None both skip overdue filtering intentionally.
+    # This preserves the current behavior while making the intent explicit.
     if overdue:
         tasks = [task for task in tasks if is_overdue(task, date.today())]
+    # matches_keyword() treats an empty string as no filter, so we still
+    # evaluate this branch when search is provided but empty.
     if search is not None:
         tasks = [task for task in tasks if matches_keyword(task, search)]
     return tasks
