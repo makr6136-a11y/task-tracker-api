@@ -14,7 +14,7 @@ external services.
 
 **Current scope:**
 - `GET /health` — service health check
-- `GET /tasks` — list tasks, filterable by `status`, `priority`, `overdue`
+- `GET /tasks` — list tasks, filterable by `status`, `priority`, `overdue`, and `search`
 - `POST /tasks` — create a task
 - `GET /tasks/{task_id}` — fetch a single task
 - `PATCH /tasks/{task_id}` — partially update a task, enforcing status
@@ -26,11 +26,6 @@ external services.
 - A database or any persistence beyond the in-memory `_tasks` dict
 - Deployment / production hosting configuration
 - This README does not claim the app is production-ready.
-
-[VERIFY] `docs/midcourse/mini-adr.md` documents a planned `search` query
-parameter on `GET /tasks` (case-insensitive substring match on title/
-description). As of this README, it is **not implemented** in `app/main.py`
-or `app/filters.py` — do not rely on it until it ships.
 
 ## 2. Prerequisites
 
@@ -162,7 +157,8 @@ task-tracker-api/
 │       ├── mini-adr.md       # architecture decisions (due dates, search)
 │       ├── user-stories.md
 │       ├── prompt-log.md
-│       └── verification.md   # manual test/break-test log
+│       ├── verification.md   # manual test/break-test log
+│       └── reflection.md     # final reflection
 ├── Dockerfile
 ├── .dockerignore
 ├── .env.example
@@ -199,8 +195,6 @@ task-tracker-api/
   currently indistinguishable — the route only checks truthiness of
   `overdue`, so there is no way to explicitly request "not overdue" via this
   parameter.
-- [VERIFY] The `search` parameter described in `docs/midcourse/mini-adr.md`
-  is not implemented as of this read (see [Project Overview](#1-project-overview)).
 
 ## 10. Decisions and Notes
 
@@ -214,8 +208,10 @@ task-tracker-api/
 a mini architecture decision record:
 
 - [`docs/midcourse/mini-adr.md`](docs/midcourse/mini-adr.md) — architecture
-  decisions (due dates + overdue filter; planned search + combined filters)
+  decisions (due dates + overdue filter; search + combined filters)
 - [`docs/midcourse/user-stories.md`](docs/midcourse/user-stories.md)
 - [`docs/midcourse/prompt-log.md`](docs/midcourse/prompt-log.md)
 - [`docs/midcourse/verification.md`](docs/midcourse/verification.md) — manual
   test / break-test log
+- [`docs/midcourse/reflection.md`](docs/midcourse/reflection.md) — project
+  reflections and lessons learned
