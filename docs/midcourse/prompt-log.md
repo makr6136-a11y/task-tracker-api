@@ -121,4 +121,113 @@ Output only the new test functions to add to tests/test_tasks.py.
 
 ## Feature 2: Search + Combined Filters
 
-*(To be completed after Feature 2 implementation)*
+### Prompt 1: Add search query parameter and matches_keyword function
+
+**Prompt used:**
+
+Add search support to my existing FastAPI Task Tracker.
+
+Context files: @app/main.py @app/models.py @app/filters.py
+
+Task: Add a search query parameter to the existing GET /tasks route. Do NOT add a new route.
+
+Exact specification:
+
+In app/filters.py, add a new function:
+def matches_keyword(task: TaskResponse, term: str) -> bool
+If term.strip() is empty, return True (no filter applied).
+Otherwise, do a case-insensitive substring match against task.title and task.description (treat description as "" if None).
+Return True if the term matches either field.
+In app/main.py, modify the existing GET /tasks route:
+Add an optional query parameter: search: str | None = None
+After applying existing status/priority/overdue filters, if search is provided, further filter results using matches_keyword(task, search).
+No matches should return 200 with [].
+
+DO NOT:
+
+DO NOT add a separate /tasks/search endpoint.
+DO NOT modify POST, PATCH, or DELETE routes.
+DO NOT change storage.py.
+DO NOT add fuzzy matching, regex, or wildcard support — plain substring only.
+
+Output two code blocks:
+
+FILE: app/filters.py (new function only)
+MODIFIED GET /tasks ROUTE ONLY FROM app/main.py
+
+**What AI returned:** Correctly generated `matches_keyword(task, term)` using `.casefold()` for case-insensitive comparison (a slightly stronger choice than `.lower()`), correctly handling empty terms and `None` descriptions. Correctly modified `list_tasks()` to add the `search` parameter and apply it after the existing filters, composing with `status`, `priority`, and `overdue`.
+
+**Accepted / edited / rejected:** Accepted as generated, after manual curl verification across 4 scenarios (keyword match, case-insensitivity, empty search returns everything, no-match returns `[]` — all confirmed correct). No edits needed. One minor style inconsistency noted but not acted on: the route uses `if search is not None:` while the existing `overdue` filter uses `if overdue:` — functionally equivalent given how `matches_keyword` handles empty strings internally, but a small inconsistency in condition style between the two filters.
+
+---
+
+### Prompt 2: Generate pytest tests for search
+
+**Prompt used:**
+
+You are a senior Python developer writing pytest tests for a FastAPI app.
+
+Context files: @app/main.py @app/models.py @app/storage.py @app/filters.py @tests/conftest.py @tests/test_tasks.py
+
+Task: Add new tests to tests/test_tasks.py for the search filter. Do NOT modify existing tests.
+
+Generate these named tests:
+
+test_search_matches_title_case_insensitive
+test_search_matches_description
+test_search_no_match_returns_200_and_empty_list
+test_search_empty_string_returns_all_tasks
+test_search_combined_with_status_filter
+test_search_combined_with_priority_filter
+
+Use the existing client fixture from conftest.py.
+
+DO NOT:
+
+DO NOT modify existing tests.
+DO NOT change conftest.py.
+DO NOT change app/filters.py or app/main.py.
+
+Output only the new test functions to add to tests/test_tasks.py.
+
+
+**What AI returned:** 6 well-structured tests covering keyword matching in both title and description, case-insensitivity, empty-search behavior, no-match handling, and composition with both the `status` and `priority` filters.
+
+**Accepted / edited / rejected:** Accepted all 6 as generated, after running the full suite and confirming 37/37 passed. One verification hiccup along the way: an initial copy of the generated code appeared to be missing the assertion body for one test, which turned out to be a copy/paste artifact rather than an actual gap in the generated code — confirmed by asking the assistant to show the complete, untruncated function directly. Additionally ran a Break Test (commenting out the description half of the match condition in `matches_keyword()`), which correctly caused exactly one test to fail (`test_search_matches_description`), confirming the tests are meaningful.
+
+---
+
+### Prompt 3: Add search bar to the frontend
+
+**Prompt used:**
+
+Extend the existing Kanban board in frontend/index.html to support search.
+
+Current file: frontend/index.html
+
+Existing behavior to preserve:
+
+Three columns by status, priority sorting, loading/empty/ready/error states.
+Drag-and-drop PATCH with rollback on server rejection.
+Existing modal create/edit flow, including due date support.
+The existing "Show overdue only" checkbox and its integration with fetchTasks().
+
+Requirements:
+
+Add a text input in the header, near the "Show overdue only" checkbox:
+<input type="text" id="search-input" placeholder="Search tasks...">
+Modify fetchTasks() to include the current search input's value as a search query parameter, composing correctly with the existing overdue filter (both can be active at the same time).
+Add an event listener on the search input (use the 'input' event) that calls fetchTasks() again on every keystroke.
+When search returns zero results, reuse the existing empty-state handling already used elsewhere on the board — do not invent new UI for this.
+
+Constraints:
+
+Do not change drag-and-drop logic.
+Do not change the modal or payload logic.
+Do not add debouncing/throttling — keep it simple.
+Return a focused diff only (the header HTML addition and the modified fetchTasks function), not the entire file.
+
+**What AI returned:** A search input added to the header, and `fetchTasks()` modified to build a `URLSearchParams` query string combining `search` and `overdue`, plus an `input` event listener firing `fetchTasks()` on every keystroke.
+
+**Accepted / edited / rejected:** Accepted as generated. Verified manually in the browser: search correctly narrowed results while typing and correctly restored all tasks when cleared. One UX side effect observed (not a bug): searching on every keystroke caused a visible "loading" flicker while typing, since each keystroke triggers a full fetch. Evaluated adding a debounce delay to smooth this out, but decided against it — it wasn't a functional requirement in the original user stories (S1-S5) or the midterm brief, and the search behavior was already fully correct without it.
+
