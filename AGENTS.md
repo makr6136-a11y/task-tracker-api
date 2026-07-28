@@ -10,7 +10,7 @@ This repository contains a local Task Tracker application:
 - Pydantic request and response models in `app/models.py`.
 - In-memory task storage in `app/storage.py`; there is no database or durable persistence.
 - Status-transition rules in `app/business_rules.py`.
-- Search and overdue-filter helpers in `app/filters.py`.
+- An overdue-filter helper in `app/filters.py`.
 - A single-file vanilla HTML/CSS/JavaScript frontend in `frontend/index.html`.
 - A pytest suite in `tests/`.
 
@@ -23,7 +23,9 @@ The API currently defines:
 - `PATCH /tasks/{task_id}`
 - `DELETE /tasks/{task_id}`
 
-`GET /tasks` accepts `status`, `priority`, `overdue`, and `search` query parameters.
+`GET /tasks` accepts `status`, `priority`, and `overdue` query parameters.
+Search and keyword filtering are not implemented on this branch. Search is
+documented as a planned feature in `docs/midcourse/mini-adr.md`.
 
 Sources: `README.md`, `app/main.py`, `app/storage.py`, `app/filters.py`, and `frontend/index.html`.
 
@@ -97,7 +99,8 @@ Sources: `README.md`, `requirements.txt`, `pytest.ini`, `tests/conftest.py`, `.g
 - `app/models.py` defines task status and priority enums plus create, update, and response models.
 - `app/storage.py` stores tasks in the module-level `_tasks` dictionary.
 - `app/business_rules.py` validates status changes.
-- `app/filters.py` implements overdue and keyword matching.
+- `app/filters.py` implements overdue detection. It does not implement keyword
+  matching on this branch.
 - `frontend/index.html` implements the browser interface and communicates with the API using `fetch`.
 - `tests/` contains API and model behavior checks.
 
@@ -182,10 +185,9 @@ Sources: `app/models.py`, `app/storage.py`, `tests/test_tasks.py`, and `tests/ve
 ### Filters
 
 - Status and priority filters use exact enum matches.
-- Search is case-insensitive and checks the title and description.
-- A blank search term matches all tasks.
 - A task is overdue only when it has a due date strictly before today and its status is not `Done`.
 - The current route applies the overdue filter only when `overdue` is truthy. Therefore, `overdue=false` does not select non-overdue tasks.
+- Search and keyword filtering are not implemented on this branch.
 
 Sources: `app/main.py`, `app/storage.py`, `app/filters.py`, and `tests/test_tasks.py`.
 
