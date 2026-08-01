@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.business_rules import validate_status_transition
 from app import storage
-from app.filters import is_overdue
+from app.filters import is_overdue, matches_keyword
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 app = FastAPI(
@@ -64,9 +64,11 @@ def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
     overdue: bool | None = None,
+    search: str | None = None,
 ) -> list[TaskResponse]:
     """
-    List tasks, optionally filtered by status, priority, and overdue state.
+    List tasks, optionally filtered by status, priority, overdue state,
+    and a search term against title/description.
 
     Args:
         status (TaskStatus | None): If provided, only tasks with this
@@ -78,17 +80,26 @@ def list_tasks(
             due_date and status is not Done). [VERIFY] The check is
             `if overdue:`, so `overdue=False` is not distinguished from
             `overdue=None` — neither applies overdue filtering.
+        search (str | None): If provided, only tasks whose title or
+            description contains the search term case-insensitively are
+            returned.
 
     Returns:
         list[TaskResponse]: Tasks matching the given filters, in
         storage insertion order.
 
     Example:
-        GET /tasks?status=ToDo&priority=High&overdue=true
+        GET /tasks?status=ToDo&priority=High&overdue=true&search=report
     """
     tasks = storage.get_all_tasks(status=status, priority=priority)
+    # overdue=False and overdue=None both skip overdue filtering intentionally.
+    # This preserves the current behavior while making the intent explicit.
     if overdue:
         tasks = [task for task in tasks if is_overdue(task, date.today())]
+    # matches_keyword() treats an empty string as no filter, so we still
+    # evaluate this branch when search is provided but empty.
+    if search is not None:
+        tasks = [task for task in tasks if matches_keyword(task, search)]
     return tasks
 
 
