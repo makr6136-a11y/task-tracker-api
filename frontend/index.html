@@ -972,9 +972,12 @@
         const payload = {
   title: titleVal,
   description: descriptionVal === '' ? '' : descriptionVal,
-  assignee: assigneeVal,
-  priority: priorityVal === '' ? '' : priorityVal
+  assignee: assigneeVal
 };
+
+if (priorityVal !== '') {
+  payload.priority = priorityVal;
+}
 
 if (mode === 'create') {
   payload.status = statusVal;
