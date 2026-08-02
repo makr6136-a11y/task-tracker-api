@@ -214,9 +214,12 @@ task-tracker-api/
 - [`docs/decisions/dockerfile-design.md`](docs/decisions/dockerfile-design.md)
   — Dockerfile design decisions (two-stage build, non-root user, Python
   version and CI-coverage open questions)
+- [`docs/decisions/comments-feature-plan.md`](docs/decisions/comments-feature-plan.md)
+  — Agent-generated plan for a comments-on-tasks feature (not implemented),
+  including an ungrounded-vs-repo-grounded comparison and critique
 
-`docs/midcourse/` contains earlier planning and verification docs, including
-a mini architecture decision record:
+`docs/midcourse/` contains earlier planning and verification docs from the
+mid-course project, including a mini architecture decision record:
 
 - [`docs/midcourse/mini-adr.md`](docs/midcourse/mini-adr.md) — architecture
   decisions (due dates + overdue filter; search + combined filters)
@@ -224,5 +227,29 @@ a mini architecture decision record:
 - [`docs/midcourse/prompt-log.md`](docs/midcourse/prompt-log.md)
 - [`docs/midcourse/verification.md`](docs/midcourse/verification.md) — manual
   test / break-test log
-- [`docs/midcourse/reflection.md`](docs/midcourse/reflection.md) — project
-  reflections and lessons learned
+- [`docs/midcourse/reflection.md`](docs/midcourse/reflection.md) — midterm
+  reflection
+
+`docs/` also contains later, course-wide AI governance and review documents:
+
+- [`docs/security-review.md`](docs/security-review.md) — AI-generated
+  security audit, graded findings, independent manual scan, and a top-3
+  backlog
+- [`docs/governance-worksheet.md`](docs/governance-worksheet.md) — risk
+  classification of everything shared with AI tools during the course
+- [`docs/ai-usage.md`](docs/ai-usage.md) — a line-by-line trace of an
+  AI-generated code block, plus three personal AI usage rules
+- [`docs/architecture.md`](docs/architecture.md) — a comparison of three
+  context strategies (minimal, structured, targeted) used to generate this
+  project's architecture documentation, with a chosen final version and a
+  transferable context-engineering rule
+- [`docs/ai-playbook.md`](docs/ai-playbook.md) — a one-page personal AI
+  coding playbook with a completed Decision Card and a 30-day re-read
+  commitment
+- [`docs/course-reflection.md`](docs/course-reflection.md) — a closing
+  reflection on which AI tool fit which task shape across the course, and
+  the single most important rule learned
+- [`docs/final-ai-review.md`](docs/final-ai-review.md) — explains the one
+  `app/`/`frontend/` change (a security bug fix) made during the final
+  course project round, with evidence it was reviewed rather than accepted
+  blindly
