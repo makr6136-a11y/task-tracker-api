@@ -143,7 +143,7 @@ task-tracker-api/
 │   ├── models.py             # Pydantic schemas (TaskCreate/Update/Response, enums)
 │   ├── storage.py            # in-memory persistence (module-level _tasks dict)
 │   ├── business_rules.py     # status transition validation
-│   └── filters.py            # pure query helpers (is_overdue)
+│   └── filters.py            # pure query helpers (is_overdue, matches_keyword)
 ├── frontend/
 │   └── index.html            # static vanilla-JS UI, no build step
 ├── tests/
@@ -153,18 +153,29 @@ task-tracker-api/
 │   ├── test_tasks.py
 │   └── verify_a.py           # manual script, not run by pytest
 ├── docs/
-│   └── midcourse/
-│       ├── mini-adr.md       # architecture decisions (due dates, search)
-│       ├── user-stories.md
-│       ├── prompt-log.md
-│       ├── verification.md   # manual test/break-test log
-│       └── reflection.md     # final reflection
+│   ├── decisions/
+│   │   ├── dockerfile-design.md      # Dockerfile design decision note
+│   │   └── comments-feature-plan.md  # agent-planned feature, ungrounded vs grounded comparison
+│   ├── midcourse/
+│   │   ├── mini-adr.md       # architecture decisions (due dates, search)
+│   │   ├── user-stories.md
+│   │   ├── prompt-log.md
+│   │   ├── verification.md   # manual test/break-test log
+│   │   └── reflection.md     # midterm reflection
+│   ├── security-review.md    # graded AI security findings, manual scan, reconciliation
+│   ├── governance-worksheet.md  # risk-classified log of what was shared with AI tools
+│   ├── ai-usage.md           # traced code block + personal AI usage rules
+│   ├── architecture.md       # context-strategy comparison (A/B/C) and chosen architecture doc
+│   ├── ai-playbook.md        # one-page personal AI coding playbook + Decision Card
+│   ├── course-reflection.md  # tool-per-task-shape summary, single most important rule
+│   └── final-ai-review.md    # explains the one app/frontend change made in the final round
 ├── Dockerfile
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
 ├── pytest.ini
 ├── README.md
+├── AGENTS.md
 ├── CLAUDE.md
 └── requirements.txt
 ```
