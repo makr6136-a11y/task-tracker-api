@@ -253,3 +253,8 @@ mid-course project, including a mini architecture decision record:
   `app/`/`frontend/` change (a security bug fix) made during the final
   course project round, with evidence it was reviewed rather than accepted
   blindly
+  Section 10 addition:
+
+- [`docs/release-evidence.md`](docs/release-evidence.md) — consolidated
+  baseline, CI, Docker, and documentation evidence for this release
+  
